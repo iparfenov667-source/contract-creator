@@ -275,9 +275,4 @@ export const singleServices: SingleService[] = [
   { name: "Составление правового заключения", description: "подготовка письменного правового заключения (аналитической записки)" },
 ];
 
-export const tariffs = [
-  { label: "180 000 ₽ (1 мес × 180 000 ₽)", summa: 180000, payment: 180000, months: 1, nds: 9000 },
-  { label: "200 000 ₽ (8 мес × 25 000 ₽)", summa: 200000, payment: 25000, months: 8, nds: 10000 },
-  { label: "240 000 ₽ (12 мес × 20 000 ₽)", summa: 240000, payment: 20000, months: 12, nds: 12000 },
-  { label: "270 000 ₽ (18 мес × 15 000 ₽)", summa: 270000, payment: 15000, months: 18, nds: 13500 },
-];
+// Tariffs removed - now using free input fields for summa and months

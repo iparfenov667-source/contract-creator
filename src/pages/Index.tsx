@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FileText, User, Scale, CreditCard, Phone, MapPin, Calendar, Hash, Download } from "lucide-react";
+import { FileText, User, Scale, CreditCard, Phone, MapPin, Calendar, Hash, Download, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mainServices, singleServices, tariffs, type ServiceRole } from "@/data/services";
+import { mainServices, singleServices, type ServiceRole } from "@/data/services";
 import { generateContract } from "@/lib/generateContract";
 import { toast } from "sonner";
 
@@ -16,7 +16,9 @@ const Index = () => {
   const [categoryIndex, setCategoryIndex] = useState<string>("");
   const [serviceIndex, setServiceIndex] = useState<string>("");
   const [singleServiceIndex, setSingleServiceIndex] = useState<string>("");
-  const [tariffIndex, setTariffIndex] = useState<string>("");
+
+  const [summa, setSumma] = useState("");
+  const [months, setMonths] = useState("");
 
   const [contractNum, setContractNum] = useState("");
   const [dateZakl, setDateZakl] = useState("");
@@ -42,9 +44,18 @@ const Index = () => {
     return "";
   };
 
+  const parsedSumma = parseFloat(summa) || 0;
+  const parsedMonths = parseInt(months) || 0;
+  const monthlyPayment = parsedMonths > 0 ? Math.ceil(parsedSumma / parsedMonths) : 0;
+  const nds = Math.ceil(parsedSumma * 0.05);
+
   const handleGenerate = async () => {
-    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || tariffIndex === "") {
+    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || !summa || !months) {
       toast.error("Заполните все обязательные поля!");
+      return;
+    }
+    if (parsedMonths < 1 || parsedMonths > 24) {
+      toast.error("Рассрочка от 1 до 24 месяцев!");
       return;
     }
     const sutPor = getSutPor();
@@ -53,7 +64,6 @@ const Index = () => {
       return;
     }
 
-    const tariff = tariffs[parseInt(tariffIndex)];
     setIsGenerating(true);
     try {
       await generateContract({
@@ -62,13 +72,13 @@ const Index = () => {
         fio,
         data_rod: dataRod,
         passport,
-        summa: tariff.summa,
+        summa: parsedSumma,
         sut_por: sutPor,
         adres,
         phone,
-        payment: tariff.payment,
-        months: tariff.months,
-        nds: tariff.nds,
+        payment: monthlyPayment,
+        months: parsedMonths,
+        nds,
       });
       toast.success("Договор успешно сгенерирован!");
     } catch (e) {
@@ -254,27 +264,46 @@ const Index = () => {
             <CreditCard className="w-5 h-5 text-primary" />
             Стоимость и рассрочка
           </h2>
-          <Select value={tariffIndex} onValueChange={setTariffIndex}>
-            <SelectTrigger><SelectValue placeholder="Выберите тариф" /></SelectTrigger>
-            <SelectContent>
-              {tariffs.map((t, i) => (
-                <SelectItem key={i} value={String(i)}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {tariffIndex !== "" && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-muted-foreground" /> Сумма договора (₽)
+              </Label>
+              <Input
+                type="number"
+                value={summa}
+                onChange={(e) => setSumma(e.target.value)}
+                placeholder="200000"
+                min="1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" /> Рассрочка (мес, 1–24)
+              </Label>
+              <Input
+                type="number"
+                value={months}
+                onChange={(e) => setMonths(e.target.value)}
+                placeholder="12"
+                min="1"
+                max="24"
+              />
+            </div>
+          </div>
+          {parsedSumma > 0 && parsedMonths > 0 && parsedMonths <= 24 && (
             <div className="mt-4 p-4 bg-muted rounded-lg grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Сумма</p>
-                <p className="text-lg font-semibold text-foreground">{tariffs[parseInt(tariffIndex)].summa.toLocaleString("ru-RU")} ₽</p>
+                <p className="text-lg font-semibold text-foreground">{parsedSumma.toLocaleString("ru-RU")} ₽</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Платёж/мес</p>
-                <p className="text-lg font-semibold text-foreground">{tariffs[parseInt(tariffIndex)].payment.toLocaleString("ru-RU")} ₽</p>
+                <p className="text-lg font-semibold text-foreground">{monthlyPayment.toLocaleString("ru-RU")} ₽</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Срок</p>
-                <p className="text-lg font-semibold text-foreground">{tariffs[parseInt(tariffIndex)].months} мес.</p>
+                <p className="text-xs text-muted-foreground">НДС (5%)</p>
+                <p className="text-lg font-semibold text-foreground">{nds.toLocaleString("ru-RU")} ₽</p>
               </div>
             </div>
           )}
