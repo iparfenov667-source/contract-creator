@@ -45,6 +45,30 @@ export async function generateContract(data: ContractData): Promise<void> {
   const arrayBuffer = await response.arrayBuffer();
   
   const zip = new PizZip(arrayBuffer);
+
+  // Fix Word XML run-splitting for template tags
+  const fixSplitTags = (zip: PizZip) => {
+    const files = zip.files;
+    for (const filename of Object.keys(files)) {
+      if (filename.endsWith(".xml") || filename.endsWith(".xml.rels")) {
+        const content = files[filename].asText();
+        // Merge split runs: remove XML tags between {{ and }}
+        const fixed = content.replace(
+          /\{\{(?:[^}]|}(?!}))*\}\}/g,
+          (match) => {
+            // Strip any XML tags inside the placeholder
+            return match.replace(/<[^>]+>/g, "");
+          }
+        );
+        if (fixed !== content) {
+          zip.file(filename, fixed);
+        }
+      }
+    }
+  };
+
+  fixSplitTags(zip);
+
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
