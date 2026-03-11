@@ -46,8 +46,8 @@ const Index = () => {
   };
 
   const parsedSumma = parseFloat(summa) || 0;
-  const parsedMonths = parseInt(months) || 0;
-  const monthlyPayment = parsedMonths > 0 ? Math.ceil(parsedSumma / parsedMonths) : 0;
+  const parsedMonths = paymentType === "full" ? 1 : (parseInt(months) || 0);
+  const monthlyPayment = paymentType === "full" ? parsedSumma : (parsedMonths > 0 ? Math.ceil(parsedSumma / parsedMonths) : 0);
   const nds = Math.ceil(parsedSumma * 0.05);
 
   const handleGenerate = async () => {
