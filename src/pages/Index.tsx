@@ -51,12 +51,12 @@ const Index = () => {
   const nds = Math.ceil(parsedSumma * 0.05);
 
   const handleGenerate = async () => {
-    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || !summa || !months) {
+    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || !summa) {
       toast.error("Заполните все обязательные поля!");
       return;
     }
-    if (parsedMonths < 1 || parsedMonths > 24) {
-      toast.error("Рассрочка от 1 до 24 месяцев!");
+    if (paymentType === "installment" && (parsedMonths < 2 || parsedMonths > 24)) {
+      toast.error("Рассрочка от 2 до 24 месяцев!");
       return;
     }
     const sutPor = getSutPor();
