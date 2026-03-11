@@ -17,6 +17,7 @@ const Index = () => {
   const [serviceIndex, setServiceIndex] = useState<string>("");
   const [singleServiceIndex, setSingleServiceIndex] = useState<string>("");
 
+  const [paymentType, setPaymentType] = useState<"full" | "installment">("installment");
   const [summa, setSumma] = useState("");
   const [months, setMonths] = useState("");
 
