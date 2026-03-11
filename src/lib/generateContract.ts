@@ -78,8 +78,8 @@ export async function generateContract(data: ContractData): Promise<void> {
   const paymentDates = generatePaymentDates(data.date_zakl, data.months);
 
   const punkt43 = data.paymentType === "full"
-    ? "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полной оплаты по договору."
-    : "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полного месячного платежа по предусмотренной договором рассрочке.";
+    ? "Настоящий договор начинает действовать с момента внесения Доверителем полной оплаты по договору"
+    : "Настоящий договор начинает действовать с момента внесения Доверителем полного месячного платежа по предусмотренной договором рассрочке";
 
   const context: Record<string, string | number> = {
     contract_num: data.contract_num,
