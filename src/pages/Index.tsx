@@ -80,6 +80,7 @@ const Index = () => {
         payment: monthlyPayment,
         months: parsedMonths,
         nds,
+        paymentType,
       });
       toast.success("Договор успешно сгенерирован!");
     } catch (e) {
