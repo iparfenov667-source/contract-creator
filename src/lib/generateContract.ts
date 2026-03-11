@@ -50,19 +50,28 @@ export async function generateContract(data: ContractData): Promise<void> {
   const fixSplitTags = (zip: PizZip) => {
     const files = zip.files;
     for (const filename of Object.keys(files)) {
-      if (filename.endsWith(".xml") || filename.endsWith(".xml.rels")) {
-        const content = files[filename].asText();
-        // Merge split runs: remove XML tags between {{ and }}
-        const fixed = content.replace(
-          /\{\{(?:[^}]|}(?!}))*\}\}/g,
-          (match) => {
-            // Strip any XML tags inside the placeholder
-            return match.replace(/<[^>]+>/g, "");
-          }
-        );
-        if (fixed !== content) {
-          zip.file(filename, fixed);
-        }
+      if (!filename.endsWith(".xml")) continue;
+      let content = files[filename].asText();
+      let changed = false;
+
+      // Find split template tags: {{ may be split across multiple <w:r> runs
+      // Strategy: find {{ and }} in the text layer, then merge the runs between them
+      const tagRegex = /(<w:r[ >](?:(?!<w:r[ >]).)*?<w:t[^>]*>(?:[^<]*?\{\{))/g;
+      
+      // Simpler approach: remove run boundaries inside template tags
+      // First, extract all text to find placeholders, then clean XML between {{ and }}
+      let result = content;
+      
+      // Match from {{ through any XML tags to }}
+      const splitTagRegex = /\{\{((?:[^}]|\}(?!\}))*)\}\}/g;
+      result = result.replace(splitTagRegex, (match) => {
+        const cleaned = match.replace(/<\/w:t><\/w:r><w:r(?:\s[^>]*)?>(?:<w:rPr>(?:(?!<\/w:rPr>).)*<\/w:rPr>)?<w:t(?:\s[^>]*)?>/g, "");
+        if (cleaned !== match) changed = true;
+        return cleaned;
+      });
+
+      if (changed) {
+        zip.file(filename, result);
       }
     }
   };
