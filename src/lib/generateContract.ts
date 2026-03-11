@@ -15,6 +15,7 @@ interface ContractData {
   payment: number;
   months: number;
   nds: number;
+  paymentType: "full" | "installment";
 }
 
 function generatePaymentDates(dateStr: string, months: number): string[] {
@@ -52,6 +53,10 @@ export async function generateContract(data: ContractData): Promise<void> {
 
   const paymentDates = generatePaymentDates(data.date_zakl, data.months);
 
+  const punkt43 = data.paymentType === "full"
+    ? "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полной оплаты по договору."
+    : "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полного месячного платежа по предусмотренной договором рассрочке.";
+
   const context: Record<string, string | number> = {
     contract_num: data.contract_num,
     date_zakl: data.date_zakl,
@@ -60,9 +65,10 @@ export async function generateContract(data: ContractData): Promise<void> {
     passport: data.passport,
     summa: data.summa.toLocaleString("ru-RU"),
     sut_por: data.sut_por,
-    srok: data.months,
+    srok: data.paymentType === "full" ? "" : data.months,
     adres: data.adres,
     phone: data.phone,
+    punkt_4_3: punkt43,
   };
 
   for (let i = 1; i <= 24; i++) {

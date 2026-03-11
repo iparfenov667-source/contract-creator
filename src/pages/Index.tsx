@@ -17,6 +17,7 @@ const Index = () => {
   const [serviceIndex, setServiceIndex] = useState<string>("");
   const [singleServiceIndex, setSingleServiceIndex] = useState<string>("");
 
+  const [paymentType, setPaymentType] = useState<"full" | "installment">("installment");
   const [summa, setSumma] = useState("");
   const [months, setMonths] = useState("");
 
@@ -45,17 +46,17 @@ const Index = () => {
   };
 
   const parsedSumma = parseFloat(summa) || 0;
-  const parsedMonths = parseInt(months) || 0;
-  const monthlyPayment = parsedMonths > 0 ? Math.ceil(parsedSumma / parsedMonths) : 0;
+  const parsedMonths = paymentType === "full" ? 1 : (parseInt(months) || 0);
+  const monthlyPayment = paymentType === "full" ? parsedSumma : (parsedMonths > 0 ? Math.ceil(parsedSumma / parsedMonths) : 0);
   const nds = Math.ceil(parsedSumma * 0.05);
 
   const handleGenerate = async () => {
-    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || !summa || !months) {
+    if (!contractNum || !dateZakl || !fio || !dataRod || !passport || !adres || !summa) {
       toast.error("Заполните все обязательные поля!");
       return;
     }
-    if (parsedMonths < 1 || parsedMonths > 24) {
-      toast.error("Рассрочка от 1 до 24 месяцев!");
+    if (paymentType === "installment" && (parsedMonths < 2 || parsedMonths > 24)) {
+      toast.error("Рассрочка от 2 до 24 месяцев!");
       return;
     }
     const sutPor = getSutPor();
@@ -79,6 +80,7 @@ const Index = () => {
         payment: monthlyPayment,
         months: parsedMonths,
         nds,
+        paymentType,
       });
       toast.success("Договор успешно сгенерирован!");
     } catch (e) {
@@ -262,8 +264,25 @@ const Index = () => {
         <div className="form-section">
           <h2 className="form-section-title">
             <CreditCard className="w-5 h-5 text-primary" />
-            Стоимость и рассрочка
+            Стоимость и оплата
           </h2>
+
+          {/* Payment type toggle */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setPaymentType("full")}
+              className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${paymentType === "full" ? "role-toggle-active" : "role-toggle-inactive"}`}
+            >
+              💰 Полная оплата
+            </button>
+            <button
+              onClick={() => setPaymentType("installment")}
+              className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${paymentType === "installment" ? "role-toggle-active" : "role-toggle-inactive"}`}
+            >
+              📅 Рассрочка
+            </button>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
@@ -277,30 +296,45 @@ const Index = () => {
                 min="1"
               />
             </div>
-            <div>
-              <Label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" /> Рассрочка (мес, 1–24)
-              </Label>
-              <Input
-                type="number"
-                value={months}
-                onChange={(e) => setMonths(e.target.value)}
-                placeholder="12"
-                min="1"
-                max="24"
-              />
-            </div>
+            {paymentType === "installment" && (
+              <div>
+                <Label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" /> Рассрочка (мес, 2–24)
+                </Label>
+                <Input
+                  type="number"
+                  value={months}
+                  onChange={(e) => setMonths(e.target.value)}
+                  placeholder="12"
+                  min="2"
+                  max="24"
+                />
+              </div>
+            )}
           </div>
-          {parsedSumma > 0 && parsedMonths > 0 && parsedMonths <= 24 && (
-            <div className="mt-4 p-4 bg-muted rounded-lg grid grid-cols-3 gap-4 text-center">
+
+          {/* Payment info preview */}
+          <div className="mt-4 p-4 bg-muted rounded-lg text-sm text-foreground">
+            <p className="font-medium mb-2">Пункт 4.3 договора:</p>
+            <p className="text-muted-foreground italic">
+              {paymentType === "full"
+                ? "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полной оплаты по договору."
+                : "4.3. Настоящий договор начинает действовать с момента внесения Доверителем полного месячного платежа по предусмотренной договором рассрочке."}
+            </p>
+          </div>
+
+          {parsedSumma > 0 && (paymentType === "full" || (parsedMonths >= 2 && parsedMonths <= 24)) && (
+            <div className={`mt-4 p-4 bg-muted rounded-lg grid ${paymentType === "full" ? "grid-cols-2" : "grid-cols-3"} gap-4 text-center`}>
               <div>
                 <p className="text-xs text-muted-foreground">Сумма</p>
                 <p className="text-lg font-semibold text-foreground">{parsedSumma.toLocaleString("ru-RU")} ₽</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Платёж/мес</p>
-                <p className="text-lg font-semibold text-foreground">{monthlyPayment.toLocaleString("ru-RU")} ₽</p>
-              </div>
+              {paymentType === "installment" && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Платёж/мес</p>
+                  <p className="text-lg font-semibold text-foreground">{monthlyPayment.toLocaleString("ru-RU")} ₽</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-muted-foreground">НДС (5%)</p>
                 <p className="text-lg font-semibold text-foreground">{nds.toLocaleString("ru-RU")} ₽</p>
