@@ -15,6 +15,7 @@ interface ContractData {
   payment: number;
   months: number;
   nds: number;
+  paymentType: "full" | "installment";
 }
 
 function generatePaymentDates(dateStr: string, months: number): string[] {
