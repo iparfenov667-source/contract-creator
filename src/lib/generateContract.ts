@@ -87,8 +87,8 @@ export async function generateContract(data: ContractData): Promise<void> {
   const paymentDates = generatePaymentDates(data.date_zakl, data.months);
 
   const punkt43 = data.paymentType === "full"
-    ? "полной оплаты по договору."
-    : "полного месячного платежа по предусмотренной договором рассрочке.";
+    ? "полной оплаты по договору"
+    : "полного месячного платежа по предусмотренной договором рассрочке";
 
   const context: Record<string, string | number> = {
     contract_num: data.contract_num,
